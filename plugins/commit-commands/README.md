@@ -39,10 +39,12 @@ Creates a git commit with an automatically generated commit message based on sta
 ```
 
 **Features:**
-- Automatically drafts commit messages that match your repo's style
-- Follows conventional commit practices
+- Automatically drafts commit messages following conventional commit format
+- Strict validation of commit message format (type, description, task references)
+- Detects and requires task references from branch names
+- Rejects forbidden patterns and non-descriptive commits
 - Avoids committing files with secrets (.env, credentials.json)
-- Includes Claude Code attribution in commit message
+- Provides clear error messages with suggested fixes
 
 ### `/commit-push`
 
@@ -76,12 +78,14 @@ Complete workflow command that commits, pushes, and creates a pull request in on
 
 **Features:**
 - Analyzes all commits in the branch (not just the latest)
+- Creates commits following strict conventional commit format
+- Validates commit messages before pushing
 - Creates comprehensive PR descriptions with:
   - Summary of changes (1-3 bullet points)
   - Test plan checklist
   - Claude Code attribution
 - Handles branch creation automatically
-- Uses GitHub CLI (`gh`) for PR creation
+- Multi-platform support: GitHub (`gh`) and GitLab (`glab`)
 
 **Requirements:**
 - GitHub CLI (`gh`) must be installed and authenticated
@@ -175,6 +179,189 @@ This plugin is included in the Claude Code repository. The commands are automati
 /clean_gone
 # Clean workspace ready for next feature
 ```
+
+## Conventional Commit Format
+
+All commits created by this plugin follow the [Conventional Commits](https://www.conventionalcommits.org/) specification with **strict enforcement**. Invalid commit messages will be rejected with clear error messages.
+
+### Format
+
+**Simple:**
+```
+<type>: <description>
+```
+
+**With scope:**
+```
+<type>(scope): <description>
+```
+
+**With body and task reference:**
+```
+<type>: <description>
+
+<optional longer description>
+
+Refs: <task-id>
+```
+
+### Valid Types
+
+- **feat**: New feature or functionality
+- **fix**: Bug fix
+- **refactor**: Code refactoring (no functionality change)
+- **docs**: Documentation changes
+- **build**: Build system or dependencies
+- **test**: Test additions or modifications
+- **perf**: Performance improvements
+- **style**: Code formatting (no logic change)
+- **chore**: Maintenance and tooling
+- **ci**: CI/CD configuration
+- **revert**: Revert previous commit
+
+### Validation Rules
+
+All commit messages are validated against these rules:
+
+✅ **Format Requirements:**
+- Type must be lowercase and from the valid types list
+- Colon and space required after type: `": "`
+- Description must start with lowercase letter
+- Description must be imperative mood (e.g., "add", "fix", not "added", "fixing")
+- No trailing period on description
+- Scope must be lowercase (if present)
+
+✅ **Task References:**
+- Automatically detected from branch names
+- Required when branch contains task ID (e.g., `feature/PA-1234-*`, `fix/PROJ-567-*`)
+- Format: `Refs: <TASK-ID>`
+- Supports patterns: `PA-1234`, `PROJ-999`, `[A-Z]+-\d+`
+
+❌ **Rejected Patterns:**
+- Non-descriptive: `fix: ci`, `chore: updates`, `fix: bug`
+- Code review artifacts: `refactor: changes after CR`, `fix: pr comments`
+- Wrong case: `Fix: bug`, `feat(Auth): feature`
+- Wrong tense: `feat: added feature`, `fix: fixing bug`
+- Vague descriptions (fewer than 3 meaningful words)
+
+### Examples
+
+**✅ Valid:**
+
+Simple commit:
+```
+feat: add user authentication endpoint
+```
+
+With scope:
+```
+feat(auth): implement jwt token validation
+```
+
+With body:
+```
+fix: resolve memory leak in event listeners
+
+Remove event listeners when components unmount to prevent
+memory accumulation during navigation
+```
+
+With task reference (required on `feature/PA-1234-*` branch):
+```
+feat: add oauth2 authentication flow
+
+Implements OAuth2 authorization code flow with PKCE for
+secure third-party authentication
+
+Refs: PA-1234
+```
+
+Complex example:
+```
+refactor(api): extract validation middleware
+
+Centralizes request validation logic into reusable middleware
+functions, reducing duplication across route handlers
+
+Refs: PROJ-5678
+```
+
+**❌ Invalid:**
+
+```
+Fix: bug                    # Uppercase type
+feat: Added feature         # Past tense
+fix: ci                     # Non-descriptive, forbidden pattern
+refactor: changes after CR  # Forbidden pattern
+feat: Add feature           # Uppercase description
+feat: add feature.          # Trailing period
+feat add feature            # Missing colon
+```
+
+### Validation Process
+
+When you run `/commit` or `/commit-push`:
+
+1. **Context Gathering**: Analyzes git status, diff, branch name, and recent commits
+2. **Message Generation**: Creates a commit message following conventional commit format
+3. **Validation**: Checks all format rules, task references, and forbidden patterns
+4. **Error Handling**: If validation fails, provides specific error with suggested fix
+5. **Commit Creation**: If validation passes, creates the commit
+
+### Error Messages
+
+Validation failures provide clear, actionable feedback:
+
+```
+❌ Commit message validation failed:
+
+Issue: Type must be lowercase
+Rule: Format Rules - Type must be lowercase
+Your message: "Fix: resolve parser error"
+
+Fix: Change "Fix" to "fix":
+fix: resolve parser error
+```
+
+### Task Reference Detection
+
+Task references are automatically detected from your branch name:
+
+| Branch Name | Task ID Detected | Reference Required |
+|-------------|------------------|-------------------|
+| `feature/PA-1234-auth` | PA-1234 | Yes |
+| `fix/PROJ-567-bug` | PROJ-567 | Yes |
+| `main` | None | No |
+| `develop` | None | No |
+| `refactor/PA-999-cleanup` | PA-999 | Yes |
+
+When a task ID is detected, the commit message **must** include:
+```
+Refs: <TASK-ID>
+```
+
+### Configuration
+
+Commit message rules are defined in:
+```
+plugins/commit-commands/config/conventional-commits.config.md
+```
+
+You can customize:
+- Valid commit types
+- Task reference detection patterns
+- Forbidden patterns
+- Format rules
+- Error messages
+
+### Benefits
+
+✅ **Consistency**: All commits follow the same format
+✅ **Searchability**: Easy to find commits by type
+✅ **Automation**: Enables automatic changelog generation
+✅ **Semantic Versioning**: Supports automated version bumps
+✅ **Traceability**: Links commits to tasks/issues
+✅ **Quality**: Prevents vague or non-descriptive commits
 
 ## Multi-Platform Support
 
