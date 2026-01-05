@@ -10,6 +10,15 @@ Run a comprehensive pull request review using multiple specialized agents, each 
 
 **Review Aspects (optional):** "$ARGUMENTS"
 
+## Platform Detection
+
+- Remote URL: !`git remote get-url origin 2>/dev/null || echo "no-remote"`
+
+Based on the remote URL:
+- Contains `github.com` or `github.` → Use `gh` CLI for PR operations
+- Contains `gitlab.com` or `gitlab.` → Use `glab` CLI for MR operations
+- Other → Ask user which CLI to use
+
 ## Review Workflow:
 
 1. **Determine Review Scope**
@@ -29,7 +38,9 @@ Run a comprehensive pull request review using multiple specialized agents, each 
 
 3. **Identify Changed Files**
    - Run `git diff --name-only` to see modified files
-   - Check if PR already exists: `gh pr view`
+   - Check if PR/MR already exists:
+     - GitHub: `gh pr view`
+     - GitLab: `glab mr view`
    - Identify file types and what reviews apply
 
 4. **Determine Applicable Reviews**
@@ -91,24 +102,24 @@ Run a comprehensive pull request review using multiple specialized agents, each 
 
 **Full review (default):**
 ```
-/pr-review-toolkit:review-pr
+/review-toolkit:review
 ```
 
 **Specific aspects:**
 ```
-/pr-review-toolkit:review-pr tests errors
+/review-toolkit:review tests errors
 # Reviews only test coverage and error handling
 
-/pr-review-toolkit:review-pr comments
+/review-toolkit:review comments
 # Reviews only code comments
 
-/pr-review-toolkit:review-pr simplify
+/review-toolkit:review simplify
 # Simplifies code after passing review
 ```
 
 **Parallel review:**
 ```
-/pr-review-toolkit:review-pr all parallel
+/review-toolkit:review all parallel
 # Launches all agents in parallel
 ```
 
@@ -158,7 +169,7 @@ Run a comprehensive pull request review using multiple specialized agents, each 
 **Before committing:**
 ```
 1. Write code
-2. Run: /pr-review-toolkit:review-pr code errors
+2. Run: /review-toolkit:review code errors
 3. Fix any critical issues
 4. Commit
 ```
@@ -166,7 +177,7 @@ Run a comprehensive pull request review using multiple specialized agents, each 
 **Before creating PR:**
 ```
 1. Stage all changes
-2. Run: /pr-review-toolkit:review-pr all
+2. Run: /review-toolkit:review all
 3. Address all critical and important issues
 4. Run specific reviews again to verify
 5. Create PR

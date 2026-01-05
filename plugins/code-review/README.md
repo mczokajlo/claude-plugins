@@ -84,6 +84,32 @@ https://github.com/owner/repo/blob/abc123.../src/utils.ts#L23-L28
 - General quality issues (unless in CLAUDE.md)
 - Issues with lint ignore comments
 
+## Multi-Platform Support
+
+This plugin supports GitHub, GitLab, and optionally Jira for issue tracking:
+
+| Platform | CLI Tool | PR/MR Commands             | Issue Commands              |
+|---------|---------|----------------------------|-----------------------------|
+| GitHub  | `gh`    | `gh pr view/diff/comment`  | `gh issue view/list`        |
+| GitLab  | `glab`  | `glab mr view/diff/note`   | `glab issue view/list`      |
+| Jira    | `acli`  | N/A                        | `acli jira issue view/list` |
+
+The platform is automatically detected from your git remote URL.
+
+### Jira Integration (Optional)
+
+To use Jira for issue tracking instead of the platform's native issues:
+1. Install: `brew install acli`
+2. Authenticate: `acli jira auth login`
+3. Create a `.jira` file in your repository root
+
+### Code Link Formats
+
+| Platform | Format                                                  |
+|----------|---------------------------------------------------------|
+| GitHub | `https://github.com/owner/repo/blob/SHA/path#L10-L15`   |
+| GitLab | `https://gitlab.com/owner/repo/-/blob/SHA/path#L10-15`  |
+
 ## Installation
 
 This plugin is included in the Claude Code repository. The command is automatically available when using Claude Code.
@@ -130,8 +156,10 @@ This plugin is included in the Claude Code repository. The command is automatica
 
 ## Requirements
 
-- Git repository with GitHub integration
-- GitHub CLI (`gh`) installed and authenticated
+- Git repository with GitHub or GitLab integration
+- For GitHub: GitHub CLI (`gh`) installed and authenticated
+- For GitLab: GitLab CLI (`glab`) installed and authenticated
+- (Optional) For Jira: Atlassian CLI (`acli`) installed and authenticated
 - CLAUDE.md files (optional but recommended for guideline checking)
 
 ## Troubleshooting
@@ -179,14 +207,19 @@ https://github.com/owner/repo/blob/[full-sha]/path/file.ext#L[start]-L[end]
 - Must use `#L` notation
 - Must include line range with at least 1 line of context
 
-### GitHub CLI not working
+### CLI not working
 
-**Issue**: `gh` commands fail
+**Issue**: `gh` or `glab` commands fail
 
 **Solution**:
-- Install GitHub CLI: `brew install gh` (macOS) or see [GitHub CLI installation](https://cli.github.com/)
-- Authenticate: `gh auth login`
-- Verify repository has GitHub remote
+- For GitHub:
+  - Install GitHub CLI: `brew install gh` (macOS) or see [GitHub CLI installation](https://cli.github.com/)
+  - Authenticate: `gh auth login`
+  - Verify repository has GitHub remote
+- For GitLab:
+  - Install GitLab CLI: `brew install glab` (macOS) or see [GitLab CLI installation](https://gitlab.com/gitlab-org/cli)
+  - Authenticate: `glab auth login`
+  - Verify repository has GitLab remote
 
 ## Tips
 
@@ -230,12 +263,12 @@ Edit `commands/code-review.md` to add or modify agent tasks:
 - Threshold (default 80) filters low-confidence issues
 - For CLAUDE.md issues: verifies guideline explicitly mentions it
 
-### GitHub integration
-Uses `gh` CLI for:
-- Viewing PR details and diffs
+### Platform integration
+Uses platform-specific CLI (`gh` for GitHub, `glab` for GitLab) for:
+- Viewing PR/MR details and diffs
 - Fetching repository data
 - Reading git blame and history
-- Posting review comments
+- Posting review comments/notes
 
 ## Author
 

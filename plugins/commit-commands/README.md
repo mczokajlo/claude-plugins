@@ -44,7 +44,7 @@ Creates a git commit with an automatically generated commit message based on sta
 - Avoids committing files with secrets (.env, credentials.json)
 - Includes Claude Code attribution in commit message
 
-### `/commit-push-pr`
+### `/commit-push`
 
 Complete workflow command that commits, pushes, and creates a pull request in one step.
 
@@ -57,14 +57,14 @@ Complete workflow command that commits, pushes, and creates a pull request in on
 
 **Usage:**
 ```bash
-/commit-push-pr
+/commit-push
 ```
 
 **Example workflow:**
 ```bash
 # Make your changes
 # Then run:
-/commit-push-pr
+/commit-push
 
 # Claude will:
 # - Create a feature branch (if needed)
@@ -137,7 +137,7 @@ This plugin is included in the Claude Code repository. The commands are automati
 - Trust the automated message, but verify it's accurate
 - Use for routine commits during development
 
-### Using `/commit-push-pr`
+### Using `/commit-push`
 - Use when you're ready to create a PR
 - Ensure all your changes are complete and tested
 - Claude will analyze the full branch history for the PR description
@@ -166,7 +166,7 @@ This plugin is included in the Claude Code repository. The commands are automati
 # More changes
 /commit  # Second commit
 # Ready to create PR
-/commit-push-pr
+/commit-push
 ```
 
 ### Maintenance workflow:
@@ -176,10 +176,29 @@ This plugin is included in the Claude Code repository. The commands are automati
 # Clean workspace ready for next feature
 ```
 
+## Multi-Platform Support
+
+The `/commit-push` command supports both GitHub and GitLab repositories:
+
+| Platform | CLI Tool | Command |
+|----------|----------|---------|
+| GitHub | `gh` | `gh pr create` |
+| GitLab | `glab` | `glab mr create` |
+
+The platform is automatically detected from your git remote URL.
+
+### GitLab Installation
+
+```bash
+brew install glab
+glab auth login
+```
+
 ## Requirements
 
 - Git must be installed and configured
-- For `/commit-push-pr`: GitHub CLI (`gh`) must be installed and authenticated
+- For GitHub repositories: GitHub CLI (`gh`) installed and authenticated
+- For GitLab repositories: GitLab CLI (`glab`) installed and authenticated
 - Repository must be a git repository with a remote
 
 ## Troubleshooting
@@ -192,14 +211,19 @@ This plugin is included in the Claude Code repository. The commands are automati
 - Ensure you have unstaged or staged changes
 - Run `git status` to verify changes exist
 
-### `/commit-push-pr` fails to create PR
+### `/commit-push` fails to create PR
 
-**Issue**: `gh pr create` command fails
+**Issue**: `gh pr create` or `glab mr create` command fails
 
 **Solution**:
-- Install GitHub CLI: `brew install gh` (macOS) or see [GitHub CLI installation](https://cli.github.com/)
-- Authenticate: `gh auth login`
-- Ensure repository has a GitHub remote
+- For GitHub:
+  - Install GitHub CLI: `brew install gh` (macOS) or see [GitHub CLI installation](https://cli.github.com/)
+  - Authenticate: `gh auth login`
+  - Ensure repository has a GitHub remote
+- For GitLab:
+  - Install GitLab CLI: `brew install glab` (macOS) or see [GitLab CLI installation](https://gitlab.com/gitlab-org/cli)
+  - Authenticate: `glab auth login`
+  - Ensure repository has a GitLab remote
 
 ### `/clean_gone` doesn't find branches
 
@@ -211,7 +235,7 @@ This plugin is included in the Claude Code repository. The commands are automati
 
 ## Tips
 
-- **Combine with other tools**: Use `/commit` during development, then `/commit-push-pr` when ready
+- **Combine with other tools**: Use `/commit` during development, then `/commit-push` when ready
 - **Let Claude draft messages**: The commit message analysis learns from your repo's style
 - **Regular cleanup**: Run `/clean_gone` weekly to maintain a clean branch list
 - **Review before pushing**: Always review the commit message and changes before pushing

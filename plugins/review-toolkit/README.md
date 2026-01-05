@@ -1,10 +1,28 @@
-# PR Review Toolkit
+# Review Toolkit
 
 A comprehensive collection of specialized agents for thorough pull request review, covering code comments, test coverage, error handling, type design, code quality, and code simplification.
 
 ## Overview
 
 This plugin bundles 6 expert review agents that each focus on a specific aspect of code quality. Use them individually for targeted reviews or together for comprehensive PR analysis.
+
+## Multi-Platform Support
+
+This plugin supports both GitHub and GitLab repositories:
+
+| Platform | CLI Tool | PR/MR Check    |
+|----------|----------|----------------|
+| GitHub   | `gh`     | `gh pr view`   |
+| GitLab   | `glab`   | `glab mr view` |
+
+The platform is automatically detected from your git remote URL. Since agents primarily analyze local files via git diff, platform differences are minimal.
+
+### CLI Installation
+
+| Platform | Installation        | Authentication    |
+|----------|---------------------|-------------------|
+| GitHub   | `brew install gh`   | `gh auth login`   |
+| GitLab   | `brew install glab` | `glab auth login` |
 
 ## Agents
 
@@ -184,7 +202,7 @@ Install from your personal marketplace:
 
 ```bash
 /plugins
-# Find "pr-review-toolkit"
+# Find "review-toolkit"
 # Install
 ```
 
