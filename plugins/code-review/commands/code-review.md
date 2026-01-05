@@ -1,10 +1,48 @@
 ---
-allowed-tools: Bash(gh issue view:*), Bash(gh search:*), Bash(gh issue list:*), Bash(gh pr comment:*), Bash(gh pr diff:*), Bash(gh pr view:*), Bash(gh pr list:*)
+allowed-tools: Bash(git remote:*), Bash(git blame:*), Bash(git log:*), Bash(git rev-parse:*), Bash(gh issue view:*), Bash(gh search:*), Bash(gh issue list:*), Bash(gh pr comment:*), Bash(gh pr diff:*), Bash(gh pr view:*), Bash(gh pr list:*), Bash(glab mr view:*), Bash(glab mr diff:*), Bash(glab mr list:*), Bash(glab mr note:*), Bash(glab issue view:*), Bash(glab issue list:*), Bash(acli jira issue view:*), Bash(acli jira issue list:*)
 description: Code review a pull request
 disable-model-invocation: false
 ---
 
-Provide a code review for the given pull request.
+## Platform Detection
+
+- Remote URL: !`git remote get-url origin 2>/dev/null || echo "no-remote"`
+- Jira config: !`test -f .jira && echo "jira-configured" || echo ""`
+
+Based on the remote URL:
+- Contains `github.com` or `github.` → Use `gh` CLI
+- Contains `gitlab.com` or `gitlab.` → Use `glab` CLI
+- Other → Ask user which CLI to use
+
+If Jira is configured:
+- Use `acli jira` for issue operations instead of platform native issues
+
+## CLI Command Mapping
+
+| Operation    | GitHub (`gh`)                 | GitLab (`glab`)             |
+|--------------|-------------------------------|-----------------------------|
+| View PR/MR   | `gh pr view [n]`              | `glab mr view [n]`          |
+| List PRs/MRs | `gh pr list`                  | `glab mr list`              |
+| Diff PR/MR   | `gh pr diff [n]`              | `glab mr diff [n]`          |
+| Comment      | `gh pr comment [n] -b "..."`  | `glab mr note [n] -m "..."` |
+| View issue   | `gh issue view 123`           | `glab issue view PA-123`    |
+| List issues  | `gh issue list`               | `glab issue list`           |
+
+## Code Link Formatting
+
+**GitHub:**
+https://github.com/OWNER/REPO/blob/FULL_SHA/path/file.ext#L[start]-L[end]
+
+**GitLab:**
+https://gitlab.com/OWNER/REPO/-/blob/FULL_SHA/path/file.ext#L[start]-[end]
+
+Key differences:
+- GitLab uses `/-/blob/` instead of `/blob/`
+- GitLab uses `#L[start]-[end]` instead of `#L[start]-L[end]`
+
+---
+
+Provide a code review for the given pull request (or merge request for GitLab).
 
 To do this, follow these steps precisely:
 
@@ -12,7 +50,7 @@ To do this, follow these steps precisely:
 2. Use another Haiku agent to give you a list of file paths to (but not the contents of) any relevant CLAUDE.md files from the codebase: the root CLAUDE.md file (if one exists), as well as any CLAUDE.md files in the directories whose files the pull request modified
 3. Use a Haiku agent to view the pull request, and ask the agent to return a summary of the change
 4. Then, launch 5 parallel Sonnet agents to independently code review the change. The agents should do the following, then return a list of issues and the reason each issue was flagged (eg. CLAUDE.md adherence, bug, historical git context, etc.):
-   a. Agent #1: Audit the changes to make sure they compily with the CLAUDE.md. Note that CLAUDE.md is guidance for Claude as it writes code, so not all instructions will be applicable during code review.
+   a. Agent #1: Audit the changes to make sure they comply with the CLAUDE.md. Note that CLAUDE.md is guidance for Claude as it writes code, so not all instructions will be applicable during code review.
    b. Agent #2: Read the file changes in the pull request, then do a shallow scan for obvious bugs. Avoid reading extra context beyond the changes, focusing just on the changes themselves. Focus on large bugs, and avoid small issues and nitpicks. Ignore likely false positives.
    c. Agent #3: Read the git blame and history of the code modified, to identify any bugs in light of that historical context
    d. Agent #4: Read previous pull requests that touched these files, and check for any comments on those pull requests that may also apply to the current pull request.
@@ -25,7 +63,10 @@ To do this, follow these steps precisely:
    e. 100: Absolutely certain. The agent double checked the issue, and confirmed that it is definitely a real issue, that will happen frequently in practice. The evidence directly confirms this.
 6. Filter out any issues with a score less than 80. If there are no issues that meet this criteria, do not proceed.
 7. Use a Haiku agent to repeat the eligibility check from #1, to make sure that the pull request is still eligible for code review.
-8. Finally, use the gh bash command to comment back on the pull request with the result. When writing your comment, keep in mind to:
+8. Finally, use the appropriate CLI to comment back on the pull request/merge request with the result:
+   - GitHub: `gh pr comment [n] -b "..."`
+   - GitLab: `glab mr note [n] -m "..."`
+   When writing your comment, keep in mind to:
    a. Keep your output brief
    b. Avoid emojis
    c. Link and cite relevant code, files, and URLs
@@ -44,7 +85,7 @@ Examples of false positives, for steps 4 and 5:
 Notes:
 
 - Do not check build signal or attempt to build or typecheck the app. These will run separately, and are not relevant to your code review.
-- Use `gh` to interact with Github (eg. to fetch a pull request, or to create inline comments), rather than web fetch
+- Use the appropriate CLI to interact with the platform (GitHub: `gh`, GitLab: `glab`) rather than web fetch
 - Make a todo list first
 - You must cite and link each bug (eg. if referring to a CLAUDE.md, you must link it)
 - For your final comment, follow the following format precisely (assuming for this example that you found 3 issues):
@@ -83,10 +124,12 @@ No issues found. Checked for bugs and CLAUDE.md compliance.
 
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
-- When linking to code, follow the following format precisely, otherwise the Markdown preview won't render correctly: https://github.com/anthropics/claude-cli-internal/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15
+- When linking to code, follow the platform-specific format precisely, otherwise the Markdown preview won't render correctly:
+  - **GitHub**: `https://github.com/owner/repo/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-L15`
+  - **GitLab**: `https://gitlab.com/owner/repo/-/blob/c21d3c10bc8e898b7ac1a2d745bdc9bc4e423afe/package.json#L10-15`
   - Requires full git sha
   - You must provide the full sha. Commands like `https://github.com/owner/repo/blob/$(git rev-parse HEAD)/foo/bar` will not work, since your comment will be directly rendered in Markdown.
   - Repo name must match the repo you're code reviewing
   - # sign after the file name
-  - Line range format is L[start]-L[end]
-  - Provide at least 1 line of context before and after, centered on the line you are commenting about (eg. if you are commenting about lines 5-6, you should link to `L4-7`)
+  - Line range format: GitHub uses `L[start]-L[end]`, GitLab uses `L[start]-[end]`
+  - Provide at least 1 line of context before and after, centered on the line you are commenting about (eg. if you are commenting about lines 5-6, you should link to `#L4-L7` for GitHub or `#L4-7` for GitLab)
