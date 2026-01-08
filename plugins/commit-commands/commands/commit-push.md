@@ -13,6 +13,7 @@ description: Commit, push, and open a PR/MR
 - Type: lowercase, from valid types list
 - Description: lowercase start, imperative mood (add/fix, not added/fixing), no trailing period, min 3 meaningful words
 - Scope: lowercase if present
+- Line length: max 70 characters per line (title, body, task reference)
 - Task reference: `Refs: <TASK-ID>` required IF branch name contains pattern `[A-Z]+-\d+` (e.g., PA-1234, PROJ-567)
 
 **Forbidden Patterns:** `fix: ci`, `ci: fix`, `refactor: changes after CR`, vague descriptions, wrong case/tense
@@ -49,6 +50,7 @@ Before creating the commit, validate against the Conventional Commit Rules above
 
 1. **Validate** the commit message against ALL mandatory rules:
    - Check valid type, format, case, tense/mood
+   - Verify each line is 70 characters or fewer
    - Detect task ID from branch name (pattern: `[A-Z]+-\d+`)
    - Include `Refs: <TASK-ID>` if task ID found in branch
    - Check forbidden patterns

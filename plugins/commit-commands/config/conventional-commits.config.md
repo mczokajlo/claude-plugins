@@ -33,6 +33,7 @@ Refs: <task-id>
 4. **Scope**: OPTIONAL, must be lowercase if present, wrapped in parentheses
 5. **Body**: OPTIONAL, separated from description by blank line, starts with capital letter
 6. **Task Reference**: REQUIRED if task context detected in branch name, format `Refs: <TASK-ID>`
+7. **Line Length**: REQUIRED, each line must not exceed 70 characters (title, body lines, task reference)
 
 ## Valid Commit Types
 
@@ -102,16 +103,19 @@ Only these types are allowed:
 ### Decision Tree
 
 **Task Reference Rule:**
-- **IF** branch name contains pattern `[A-Z]+-\d+` (e.g., PA-1234, PROJ-567) → Task reference **MANDATORY**
+- **IF** branch name contains pattern `[a-zA-Z]{2,8}-\d{1,7}` (e.g., PA-1234, PROJ-567) → Task reference **MANDATORY**
 - **ELSE** (branch is main, develop, or has no task ID) → Task reference **OPTIONAL**
 
 ### Branch Name Patterns
 
-- `feature/<TASK-ID>-*` (e.g., `feature/PA-1234-add-auth`)
-- `fix/<TASK-ID>-*` (e.g., `fix/PA-5678-memory-leak`)
-- `refactor/<TASK-ID>-*` (e.g., `refactor/PROJ-999-cleanup`)
-- `<PROJECT>-<NUMBER>` anywhere in branch name (e.g., `PA-1234`, `PROJ-456`)
-- Pattern: `[A-Z]+-\d+` (uppercase letters, hyphen, numbers)
+- `feature/<TASK-ID>-*` (e.g., `feature/pa-1234-add-auth`)
+- `feature/*-<TASK-ID>-*` (e.g., `feature/mc-pa-1234-add-auth`)
+- `fix/<TASK-ID>-*` (e.g., `fix/pa-5678-memory-leak`)
+- `fix/*-<TASK-ID>-*` (e.g., `fix/ah-pa-5678-memory-leak`)
+- `refactor/<TASK-ID>-*` (e.g., `refactor/proj-999-cleanup`)
+- `refactor/*-<TASK-ID>-*` (e.g., `refactor/as-proj-999-cleanup`)
+- `<PROJECT>-<NUMBER>` anywhere in branch name (e.g., `PA-1234`, `proj-456`)
+- Pattern: `[a-zA-Z]{2,8}-\d{1,7}` (uppercase letters, hyphen, numbers)
 
 ### Task Reference Format
 
@@ -211,6 +215,16 @@ Example: "feat: add user authentication" → 3 meaningful words (add, user, auth
 - Capital "R" in "Refs"
 - Must match task ID from branch name
 - Can reference multiple tasks: `Refs: PA-1234, PA-5678`
+
+### Line Length Rules
+- Each line must not exceed 70 characters
+- Applies to:
+  - Commit title (first line)
+  - Each body paragraph line
+  - Task reference line
+- Character count includes all characters (letters, spaces, punctuation)
+- Blank lines (separators) are exempt
+- Long URLs or code snippets should be avoided in commit messages
 
 ## Examples
 
@@ -344,6 +358,18 @@ chore: updates
 # Should be: chore: update eslint to version 8.5
 ```
 
+**Line too long:**
+```
+feat: add comprehensive user authentication system with oauth2 support and jwt tokens
+# Should be broken into multiple lines:
+feat: add user authentication system
+
+Implements OAuth2 authorization and JWT token validation for
+secure user authentication
+
+Refs: PA-1234
+```
+
 ## Validation Checklist
 
 Use this checklist to validate commit messages:
@@ -362,6 +388,7 @@ Use this checklist to validate commit messages:
 - [ ] No forbidden patterns detected
 - [ ] Description is specific (not vague)
 - [ ] Minimum 3 meaningful words in description
+- [ ] Each line is 70 characters or fewer
 
 ## Error Messages
 
@@ -388,6 +415,20 @@ Your message: "Fix: resolve parser error"
 
 Fix: Change "Fix" to "fix":
 fix: resolve parser error
+```
+
+**Line length violation:**
+```
+❌ Commit message validation failed:
+
+Issue: Commit title exceeds 70 character limit (73 characters)
+Rule: Line Length - Each line must not exceed 70 characters
+Your message: "feat: add comprehensive user authentication system with oauth2 support"
+
+Fix: Break into title and body:
+feat: add user authentication system
+
+Implements OAuth2 support and token validation
 ```
 
 ## References

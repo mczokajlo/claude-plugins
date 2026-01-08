@@ -230,6 +230,7 @@ All commit messages are validated against these rules:
 - Description must be imperative mood (e.g., "add", "fix", not "added", "fixing")
 - No trailing period on description
 - Scope must be lowercase (if present)
+- Each line must not exceed 70 characters (title, body, task reference)
 
 ✅ **Task References:**
 - Automatically detected from branch names
@@ -296,6 +297,7 @@ refactor: changes after CR  # Forbidden pattern
 feat: Add feature           # Uppercase description
 feat: add feature.          # Trailing period
 feat add feature            # Missing colon
+feat: add comprehensive user authentication system with oauth2 and jwt  # Line too long (73 chars)
 ```
 
 ### Validation Process
@@ -353,6 +355,21 @@ You can customize:
 - Forbidden patterns
 - Format rules
 - Error messages
+
+### Line Length Tips
+
+**Keeping lines under 70 characters:**
+- Break long titles into title + body format
+- Use concise, specific language
+- Move technical details to the body
+
+**Example:**
+```
+✅ feat: add user authentication
+
+Implements OAuth2 authorization code flow with PKCE for
+secure third-party authentication
+```
 
 ### Benefits
 
