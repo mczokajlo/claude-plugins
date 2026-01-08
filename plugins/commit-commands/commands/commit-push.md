@@ -1,5 +1,5 @@
 ---
-allowed-tools: Bash(git remote:*), Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*), Bash(gh pr create:*), Bash(glab mr create:*)
+allowed-tools: Bash(git remote:*), Bash(git checkout --branch:*), Bash(git add:*), Bash(git status:*), Bash(git push:*), Bash(git commit:*), Bash(gh pr create:*), Bash(glab mr create:*), Task, AskUserQuestion
 description: Commit, push, and open a PR/MR
 ---
 
@@ -46,20 +46,38 @@ Based on the above changes:
 
 **CRITICAL VALIDATION REQUIREMENTS:**
 
-Before creating the commit, validate against the Conventional Commit Rules above:
+Before creating the commit, validate the message using the commit-verifier agent:
 
-1. **Validate** the commit message against ALL mandatory rules:
-   - Check valid type, format, case, tense/mood
-   - Verify each line is 70 characters or fewer
-   - Detect task ID from branch name (pattern: `[A-Z]+-\d+`)
-   - Include `Refs: <TASK-ID>` if task ID found in branch
-   - Check forbidden patterns
+1. **Draft** a commit message following the Conventional Commit Rules above
 
-2. **If validation fails:**
-   - DO NOT proceed with commit, push, or PR creation
-   - Output clear error with specific issue
+2. **Verify** the drafted message using the commit-verifier agent:
+   - Use the Task tool to launch the commit-verifier agent
+   - Pass the drafted commit message to the agent
+   - The agent will validate against ALL mandatory rules and return results
 
-3. **If validation passes:**
-   - Proceed with all steps (branch, commit, push, PR)
+3. **Handle verification results:**
 
-You have the capability to call multiple tools in a single response. You MUST do all of the above in a single message. Do not use any other tools or do anything else. Do not send any other text or messages besides these tool calls.
+   **If agent reports VALID (✅):**
+   - Proceed with all steps (branch creation if needed, commit, push, PR)
+
+   **If agent reports INVALID (❌):**
+   - Display the agent's output showing:
+     - All issues found with explanations
+     - The fixed commit message
+     - Options for the user
+   - Use AskUserQuestion tool to ask: "The commit message has validation issues. What would you like to do?"
+     - Option 1: "Use the fixed version" (Recommended)
+     - Option 2: "Edit manually"
+     - Option 3: "Abort"
+   - Handle user response:
+     - If "Use the fixed version": Use the fixed message, proceed with commit, push, and PR
+     - If "Edit manually": Ask user for new message, go back to step 2 with new message
+     - If "Abort": Stop completely, do not commit/push/create PR, inform user
+
+4. **Execute workflow** (only if validation passed or user approved):
+   - Create new branch if on main
+   - Stage files and create commit
+   - Push to origin
+   - Create pull request or merge request
+
+You have the capability to call multiple tools in a single response. After verifying the message with the agent, handle the results and either proceed with the workflow (if valid) or present options to the user (if invalid).

@@ -40,11 +40,40 @@ Creates a git commit with an automatically generated commit message based on sta
 
 **Features:**
 - Automatically drafts commit messages following conventional commit format
+- **Automatic verification** before committing (validates all rules, provides fixes)
 - Strict validation of commit message format (type, description, task references)
 - Detects and requires task references from branch names
 - Rejects forbidden patterns and non-descriptive commits
 - Avoids committing files with secrets (.env, credentials.json)
 - Provides clear error messages with suggested fixes
+
+#### Automatic Verification
+
+All commits created by `/commit` and `/commit-push` are automatically verified before creation:
+
+✅ **Pre-Commit Validation**
+- Validates commit message before creating the commit
+- Checks all conventional commit rules
+- Provides detailed feedback on issues found
+- Offers automatically fixed versions
+
+🔧 **Automatic Fixes**
+- Corrects case issues (uppercase → lowercase)
+- Fixes tense/mood (past/continuous → imperative)
+- Suggests line breaks for long lines
+- Adds missing task references
+- Replaces vague descriptions with suggestions
+
+**Workflow:**
+1. You run `/commit` or `/commit-push`
+2. Command drafts commit message from changes
+3. Verification agent validates the message
+4. If issues found:
+   - Shows what's wrong
+   - Provides fixed version
+   - Asks if you want to use the fix
+5. If valid or you approve fix:
+   - Creates the commit
 
 ### `/commit-push`
 
@@ -79,6 +108,7 @@ Complete workflow command that commits, pushes, and creates a pull request in on
 **Features:**
 - Analyzes all commits in the branch (not just the latest)
 - Creates commits following strict conventional commit format
+- **Automatic verification** before committing (validates all rules, provides fixes)
 - Validates commit messages before pushing
 - Creates comprehensive PR descriptions with:
   - Summary of changes (1-3 bullet points)
