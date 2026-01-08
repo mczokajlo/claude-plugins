@@ -7,7 +7,6 @@ disable-model-invocation: false
 ## Platform Detection
 
 - Remote URL: !`git remote get-url origin 2>/dev/null || echo "no-remote"`
-- Jira config: !`test -f .jira && echo "jira-configured" || echo ""`
 
 Based on the remote URL:
 - Contains `github.com` or `github.` → Use `gh` CLI
