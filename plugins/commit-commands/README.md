@@ -15,10 +15,9 @@ Creates a git commit with an automatically generated commit message based on sta
 **What it does:**
 1. Analyzes current git status
 2. Reviews both staged and unstaged changes
-3. Examines recent commit messages to match your repository's style
-4. Drafts an appropriate commit message
-5. Stages relevant files
-6. Creates the commit
+3. Generates commit message using git-commit skill
+4. Stages relevant files
+5. Creates the commit
 
 **Usage:**
 ```bash
@@ -39,52 +38,21 @@ Creates a git commit with an automatically generated commit message based on sta
 ```
 
 **Features:**
-- Automatically drafts commit messages following conventional commit format
-- **Automatic verification** before committing (validates all rules, provides fixes)
-- Strict validation of commit message format (type, description, task references)
-- Detects and requires task references from branch names
-- Rejects forbidden patterns and non-descriptive commits
+- Uses git-commit skill for message generation
+- Follows conventional commit format (70-char limit, ticket references)
 - Avoids committing files with secrets (.env, credentials.json)
-- Provides clear error messages with suggested fixes
-
-#### Automatic Verification
-
-All commits created by `/commit` and `/commit-push` are automatically verified before creation:
-
-✅ **Pre-Commit Validation**
-- Validates commit message before creating the commit
-- Checks all conventional commit rules
-- Provides detailed feedback on issues found
-- Offers automatically fixed versions
-
-🔧 **Automatic Fixes**
-- Corrects case issues (uppercase → lowercase)
-- Fixes tense/mood (past/continuous → imperative)
-- Suggests line breaks for long lines
-- Adds missing task references
-- Replaces vague descriptions with suggestions
-
-**Workflow:**
-1. You run `/commit` or `/commit-push`
-2. Command drafts commit message from changes
-3. Verification agent validates the message
-4. If issues found:
-   - Shows what's wrong
-   - Provides fixed version
-   - Asks if you want to use the fix
-5. If valid or you approve fix:
-   - Creates the commit
+- Includes Claude Code attribution in commit message
 
 ### `/commit-push`
 
-Complete workflow command that commits, pushes, and creates a pull request in one step.
+Complete workflow command that commits, pushes, and creates a pull/merge request in one step.
 
 **What it does:**
-1. Creates a new branch (if currently on main)
-2. Stages and commits changes with an appropriate message
-3. Pushes the branch to origin
-4. Creates a pull request using `gh pr create`
-5. Provides the PR URL
+1. Creates a new branch (if currently on main, master, or develop)
+2. Generates commit message using git-commit skill
+3. Stages and commits changes
+4. Pushes the branch to origin
+5. Detects platform (GitHub/GitLab) and creates PR/MR using appropriate CLI tool
 
 **Usage:**
 ```bash
@@ -99,26 +67,22 @@ Complete workflow command that commits, pushes, and creates a pull request in on
 
 # Claude will:
 # - Create a feature branch (if needed)
-# - Commit your changes
+# - Commit your changes using git-commit skill
 # - Push to remote
-# - Open a PR with summary and test plan
-# - Give you the PR URL to review
+# - Create PR/MR with appropriate CLI tool
+# - Give you the PR/MR URL to review
 ```
 
 **Features:**
-- Analyzes all commits in the branch (not just the latest)
-- Creates commits following strict conventional commit format
-- **Automatic verification** before committing (validates all rules, provides fixes)
-- Validates commit messages before pushing
-- Creates comprehensive PR descriptions with:
-  - Summary of changes (1-3 bullet points)
-  - Test plan checklist
-  - Claude Code attribution
+- Uses git-commit skill for message generation
 - Handles branch creation automatically
-- Multi-platform support: GitHub (`gh`) and GitLab (`glab`)
+- Platform detection (GitHub/GitLab)
+- Creates PR using `gh pr create` (GitHub) or `glab mr create` (GitLab)
+- Follows conventional commit format (70-char limit, ticket references)
 
 **Requirements:**
-- GitHub CLI (`gh`) must be installed and authenticated
+- GitHub CLI (`gh`) must be installed and authenticated (for GitHub repos)
+- GitLab CLI (`glab`) must be installed and authenticated (for GitLab repos)
 - Repository must have a remote named `origin`
 
 ### `/clean_gone`
@@ -159,6 +123,31 @@ Cleans up local branches that have been deleted from the remote repository.
 - When your local branch list is cluttered with stale branches
 - During regular repository maintenance
 
+## Skills
+
+### Git Commit Skill
+
+The git-commit skill generates conventional commit messages following the Conventional Commits specification with project-specific requirements.
+
+**What it provides:**
+1. Standard conventional commit types (feat, fix, chore, docs, refactor, test, build, perf, style, ci, revert)
+2. Structured format with optional scope, body, and footer
+3. Breaking change indicators
+4. Project-specific validations (70-char line limit, ticket references)
+
+**Features:**
+- Enforces 70-character maximum line length (stricter than standard)
+- Requires ticket reference footer (Refs: TICKET-ID)
+- Validates conventional commit format
+- Provides commit type guidelines and examples
+
+**Used by:**
+- `/commit` command for single commit creation
+- `/commit-push` command for commit and PR/MR workflows
+
+**Details:**
+See `plugins/commit-commands/skills/git-commit/SKILL.md` for complete format specification and examples.
+
 ## Installation
 
 This plugin is included in the Claude Code repository. The commands are automatically available when using Claude Code.
@@ -167,15 +156,15 @@ This plugin is included in the Claude Code repository. The commands are automati
 
 ### Using `/commit`
 - Review the staged changes before committing
-- Let Claude analyze your changes and match your repo's commit style
-- Trust the automated message, but verify it's accurate
+- Let the git-commit skill generate conventional commit messages
+- Ensure ticket references are included (Refs: TICKET-ID)
 - Use for routine commits during development
 
 ### Using `/commit-push`
-- Use when you're ready to create a PR
+- Use when you're ready to create a PR/MR
 - Ensure all your changes are complete and tested
-- Claude will analyze the full branch history for the PR description
-- Review the PR description and edit if needed
+- Automatically creates branch, commits, pushes, and opens PR/MR
+- Works with both GitHub (gh) and GitLab (glab)
 - Use when you want to minimize context switching
 
 ### Using `/clean_gone`
@@ -210,229 +199,10 @@ This plugin is included in the Claude Code repository. The commands are automati
 # Clean workspace ready for next feature
 ```
 
-## Conventional Commit Format
-
-All commits created by this plugin follow the [Conventional Commits](https://www.conventionalcommits.org/) specification with **strict enforcement**. Invalid commit messages will be rejected with clear error messages.
-
-### Format
-
-**Simple:**
-```
-<type>: <description>
-```
-
-**With scope:**
-```
-<type>(scope): <description>
-```
-
-**With body and task reference:**
-```
-<type>: <description>
-
-<optional longer description>
-
-Refs: <task-id>
-```
-
-### Valid Types
-
-- **feat**: New feature or functionality
-- **fix**: Bug fix
-- **refactor**: Code refactoring (no functionality change)
-- **docs**: Documentation changes
-- **build**: Build system or dependencies
-- **test**: Test additions or modifications
-- **perf**: Performance improvements
-- **style**: Code formatting (no logic change)
-- **chore**: Maintenance and tooling
-- **ci**: CI/CD configuration
-- **revert**: Revert previous commit
-
-### Validation Rules
-
-All commit messages are validated against these rules:
-
-✅ **Format Requirements:**
-- Type must be lowercase and from the valid types list
-- Colon and space required after type: `": "`
-- Description must start with lowercase letter
-- Description must be imperative mood (e.g., "add", "fix", not "added", "fixing")
-- No trailing period on description
-- Scope must be lowercase (if present)
-- Each line must not exceed 70 characters (title, body, task reference)
-
-✅ **Task References:**
-- Automatically detected from branch names
-- Required when branch contains task ID (e.g., `feature/PA-1234-*`, `fix/PROJ-567-*`)
-- Format: `Refs: <TASK-ID>`
-- Supports patterns: `PA-1234`, `PROJ-999`, `[A-Z]+-\d+`
-
-❌ **Rejected Patterns:**
-- Non-descriptive: `fix: ci`, `chore: updates`, `fix: bug`
-- Code review artifacts: `refactor: changes after CR`, `fix: pr comments`
-- Wrong case: `Fix: bug`, `feat(Auth): feature`
-- Wrong tense: `feat: added feature`, `fix: fixing bug`
-- Vague descriptions (fewer than 3 meaningful words)
-
-### Examples
-
-**✅ Valid:**
-
-Simple commit:
-```
-feat: add user authentication endpoint
-```
-
-With scope:
-```
-feat(auth): implement jwt token validation
-```
-
-With body:
-```
-fix: resolve memory leak in event listeners
-
-Remove event listeners when components unmount to prevent
-memory accumulation during navigation
-```
-
-With task reference (required on `feature/PA-1234-*` branch):
-```
-feat: add oauth2 authentication flow
-
-Implements OAuth2 authorization code flow with PKCE for
-secure third-party authentication
-
-Refs: PA-1234
-```
-
-Complex example:
-```
-refactor(api): extract validation middleware
-
-Centralizes request validation logic into reusable middleware
-functions, reducing duplication across route handlers
-
-Refs: PROJ-5678
-```
-
-**❌ Invalid:**
-
-```
-Fix: bug                    # Uppercase type
-feat: Added feature         # Past tense
-fix: ci                     # Non-descriptive, forbidden pattern
-refactor: changes after CR  # Forbidden pattern
-feat: Add feature           # Uppercase description
-feat: add feature.          # Trailing period
-feat add feature            # Missing colon
-feat: add comprehensive user authentication system with oauth2 and jwt  # Line too long (73 chars)
-```
-
-### Validation Process
-
-When you run `/commit` or `/commit-push`:
-
-1. **Context Gathering**: Analyzes git status, diff, branch name, and recent commits
-2. **Message Generation**: Creates a commit message following conventional commit format
-3. **Validation**: Checks all format rules, task references, and forbidden patterns
-4. **Error Handling**: If validation fails, provides specific error with suggested fix
-5. **Commit Creation**: If validation passes, creates the commit
-
-### Error Messages
-
-Validation failures provide clear, actionable feedback:
-
-```
-❌ Commit message validation failed:
-
-Issue: Type must be lowercase
-Rule: Format Rules - Type must be lowercase
-Your message: "Fix: resolve parser error"
-
-Fix: Change "Fix" to "fix":
-fix: resolve parser error
-```
-
-### Task Reference Detection
-
-Task references are automatically detected from your branch name:
-
-| Branch Name | Task ID Detected | Reference Required |
-|-------------|------------------|-------------------|
-| `feature/PA-1234-auth` | PA-1234 | Yes |
-| `fix/PROJ-567-bug` | PROJ-567 | Yes |
-| `main` | None | No |
-| `develop` | None | No |
-| `refactor/PA-999-cleanup` | PA-999 | Yes |
-
-When a task ID is detected, the commit message **must** include:
-```
-Refs: <TASK-ID>
-```
-
-### Configuration
-
-Commit message rules are defined in:
-```
-plugins/commit-commands/config/conventional-commits.config.md
-```
-
-You can customize:
-- Valid commit types
-- Task reference detection patterns
-- Forbidden patterns
-- Format rules
-- Error messages
-
-### Line Length Tips
-
-**Keeping lines under 70 characters:**
-- Break long titles into title + body format
-- Use concise, specific language
-- Move technical details to the body
-
-**Example:**
-```
-✅ feat: add user authentication
-
-Implements OAuth2 authorization code flow with PKCE for
-secure third-party authentication
-```
-
-### Benefits
-
-✅ **Consistency**: All commits follow the same format
-✅ **Searchability**: Easy to find commits by type
-✅ **Automation**: Enables automatic changelog generation
-✅ **Semantic Versioning**: Supports automated version bumps
-✅ **Traceability**: Links commits to tasks/issues
-✅ **Quality**: Prevents vague or non-descriptive commits
-
-## Multi-Platform Support
-
-The `/commit-push` command supports both GitHub and GitLab repositories:
-
-| Platform | CLI Tool | Command |
-|----------|----------|---------|
-| GitHub | `gh` | `gh pr create` |
-| GitLab | `glab` | `glab mr create` |
-
-The platform is automatically detected from your git remote URL.
-
-### GitLab Installation
-
-```bash
-brew install glab
-glab auth login
-```
-
 ## Requirements
 
 - Git must be installed and configured
-- For GitHub repositories: GitHub CLI (`gh`) installed and authenticated
-- For GitLab repositories: GitLab CLI (`glab`) installed and authenticated
+- For `/commit-push`: GitHub CLI (`gh`) or GitLab CLI (`glab`) must be installed and authenticated (depending on your repository platform)
 - Repository must be a git repository with a remote
 
 ## Troubleshooting
@@ -445,19 +215,16 @@ glab auth login
 - Ensure you have unstaged or staged changes
 - Run `git status` to verify changes exist
 
-### `/commit-push` fails to create PR
+### `/commit-push` fails to create PR/MR
 
 **Issue**: `gh pr create` or `glab mr create` command fails
 
 **Solution**:
-- For GitHub:
-  - Install GitHub CLI: `brew install gh` (macOS) or see [GitHub CLI installation](https://cli.github.com/)
+- For GitHub: Install GitHub CLI: `brew install gh` (macOS) or see [GitHub CLI installation](https://cli.github.com/)
   - Authenticate: `gh auth login`
-  - Ensure repository has a GitHub remote
-- For GitLab:
-  - Install GitLab CLI: `brew install glab` (macOS) or see [GitLab CLI installation](https://gitlab.com/gitlab-org/cli)
+- For GitLab: Install GitLab CLI: `brew install glab` (macOS) or see [GitLab CLI installation](https://gitlab.com/gitlab-org/cli)
   - Authenticate: `glab auth login`
-  - Ensure repository has a GitLab remote
+- Ensure repository has the appropriate remote (github.com or gitlab)
 
 ### `/clean_gone` doesn't find branches
 
@@ -470,7 +237,7 @@ glab auth login
 ## Tips
 
 - **Combine with other tools**: Use `/commit` during development, then `/commit-push` when ready
-- **Let Claude draft messages**: The commit message analysis learns from your repo's style
+- **Use git-commit skill**: The skill enforces conventional commits with project-specific requirements (70-char limit, ticket references)
 - **Regular cleanup**: Run `/clean_gone` weekly to maintain a clean branch list
 - **Review before pushing**: Always review the commit message and changes before pushing
 
