@@ -39,6 +39,17 @@
       "source": "./plugins/code-review",
       "category": "productivity",
       "homepage": "https://github.com/mczokajlo/claude-plugins/tree/main/plugins/code-review"
+    },
+    {
+      "name": "agents-md-generator",
+      "description": "Automated AGENTS.md generation for coding agents onboarding",
+      "author": {
+        "name": "Michał Czokajło",
+        "email": "michal.czokajlo@gmail.com"
+      },
+      "source": "./plugins/agents-md-generator",
+      "category": "productivity",
+      "homepage": "https://github.com/mczokajlo/claude-plugins/tree/main/plugins/agents-md-generator"
     }
   ]
 }
