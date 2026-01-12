@@ -1,0 +1,9 @@
+{
+  "name": "agents-md-generator",
+  "description": "Automated AGENTS.md generation for coding agents onboarding.",
+  "author": {
+    "name": "Michał Czokajło",
+    "email": "michal.czokajlo@gmail.com"
+  }
+}
+
